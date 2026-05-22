@@ -203,9 +203,6 @@ function animate()
 	context.fillText("Interact Mechanic: Press X to interact with objects and pick up items", canvas.width/2, canvas.height/2);
 
 
-	context.fillText("touching: " + isTouchingDoor, canvas.width/2, 30);
-	context.fillText("x key: " + x, canvas.width/2, 60);
-
 	//  |-------Controls & Actions-------|
 
 	// ---> Jumping
