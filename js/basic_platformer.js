@@ -293,7 +293,7 @@ function animate()
 
 	
 	// ---> Interaction
-	if (x && !xPressed && isTouchingDoor) // and touching a type of iteractable (door, item, npc, sign, etc) 
+	if (x && !xPressed && isTouchingDoor)  
 	{
 		xPressed = true;
 
