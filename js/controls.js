@@ -4,7 +4,7 @@ var s = false;
 var d = false;
 var f = false;
 var g = false;
-var e = false;
+var x = false;
 
 
 document.addEventListener("keydown", press);
@@ -46,9 +46,9 @@ function press(e)
 	}
 
 	// Interact
-	if(e.keyCode == 69)
+	if(e.keyCode == 88)
 	{
-		e = true;
+		x = true;
 	}
 
 
@@ -91,8 +91,8 @@ function release(e)
 	}
 
 	// Interact
-	if(e.keyCode == 69)
+	if(e.keyCode == 88)
 	{
-		e = false;
+		x = false;
 	}
 }

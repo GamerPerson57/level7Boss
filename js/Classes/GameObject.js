@@ -5,6 +5,7 @@ function GameObject(obj)
 		this.y = canvas.height/2;
 		this.width = 100;
 		this.height = 100;
+		this.radius = 5;
 		this.color = "#ff0000";
 		this.force = 1;
 		this.ax = 1;
@@ -51,7 +52,7 @@ function GameObject(obj)
 			context.fillStyle = this.color;
 			context.beginPath();
 			context.translate(this.x, this.y);
-			context.arc(0, 0, this.radius(), 0, 360 *Math.PI/180, true);
+			context.arc(0, 0, this.radius(), 0, 360 * Math.PI/180, true);
 			context.closePath();
 			context.fill();
 		context.restore();

@@ -3,7 +3,6 @@ var canvas;
 var context;
 var timer;
 var interval;
-var player;
 var gameOver = false;
 var clearObj = false;
 
@@ -14,32 +13,40 @@ var clearObj = false;
 //  |-------Game Objects-------|
 
 	// Player(s)
-	player = new GameObject({x:100, y:canvas.height/2-100});
+	var player = new GameObject({x:100, y:canvas.height/2-100});
 
 	// Platform(s)
-	platform0 = new GameObject();
+	var platform0 = new GameObject();
 		platform0.width = 1000;
 		platform0.x = platform0.width/2;
 		platform0.y = canvas.height - platform0.height/2;
 		platform0.color = "#66ff33";
 	
-	platform1 = new GameObject();
+	var platform1 = new GameObject();
 		platform1.width = 1000;
 		platform1.x = platform1.width/2;
 		platform1.y = canvas.height/2 - 350;
 		platform1.color = "#50c42a";
-	
+
 	
 	// Door(s)
-	door0 = new GameObject();
-		door0.width = 200;
+	var door0 = new GameObject();
+		door0.width = 100;
 		door0.height = 200;
-		door0.x = canvas.width - 10;
+		door0.x = canvas.width - 50;
 		door0.y = canvas.height - 200;
 		door0.color = "#535032"
 
+	// Key(s)
+	var key0 = new GameObject();
+		key0.width = 50;
+		key0.height = 50;
+		key0.x = 300;
+		key0.y = canvas.height - 125;
+		key0.color = "#b8a800"
 
 
+//  |-------Other Variables-------|
 	
 	// Friction
 	var fX = .85;
@@ -56,6 +63,7 @@ var clearObj = false;
 	// Keys Pressed
 	var gPressed = false;
 	var fPressed = false;
+	var xPressed = false;
 
 	// Iteractables
 	var isTouchingDoor = false;
@@ -63,6 +71,12 @@ var clearObj = false;
 	var isTouchingSign = false;
 	var isTouchingNPC = false;
 
+	// Holding Items
+	var isHoldingKey = false;
+
+	// Message 
+	var interactMessage = "";
+	var messageTimer = 0;
 
 
 	interval = 1000/60;
@@ -70,21 +84,138 @@ var clearObj = false;
 
 function animate()
 {
-	// Text
 	context.clearRect(0,0,canvas.width, canvas.height);	
+
+
+	player.vx *= fX;
+	player.vy *= fY;
+	
+	player.vy += gravity;
+	
+	player.x += Math.round(player.vx);
+	player.y += Math.round(player.vy);
+
+
+
+
+//  |-------Object Collision-------|
+	
+	// Platform(s)
+
+	//---> Platform 0 
+	while(platform0.hitTestPoint(player.bottom()) && player.vy >=0)
+	{
+		player.y--;
+		player.vy = 0;
+		player.canJump = true;
+	}
+	while(platform0.hitTestPoint(player.left()) && player.vx <=0)
+	{
+		player.x++;
+		player.vx = 0;
+	}
+	while(platform0.hitTestPoint(player.right()) && player.vx >=0)
+	{
+		player.x--;
+		player.vx = 0;
+	}
+	while(platform0.hitTestPoint(player.top()) && player.vy <=0)
+	{
+		player.y++;
+		player.vy = 0;
+	}
+
+	// ---> Platform 1
+	while(platform1.hitTestPoint(player.bottom()) && player.vy >=0)
+	{
+		player.y--;
+		player.vy = 0;
+		player.canJump = true;
+	}
+	while(platform1.hitTestPoint(player.left()) && player.vx <=0)
+	{
+		player.x++;
+		player.vx = 0;
+	}
+	while(platform1.hitTestPoint(player.right()) && player.vx >=0)
+	{
+		player.x--;
+		player.vx = 0;
+	}
+	while(platform1.hitTestPoint(player.top()) && player.vy <=0)
+	{
+		player.y++;
+		player.vy = 0;
+	}
+
+	// Door(s)
+
+	// ---> Door 0
+	isTouchingDoor = (
+		door0.hitTestPoint({x: player.right().x + 5, y: player.right().y})  ||
+		door0.hitTestPoint(player.left())   ||
+		door0.hitTestPoint(player.top())    ||
+		door0.hitTestPoint(player.bottom())
+	);
+
+	while(door0.hitTestPoint(player.right())) 
+	{
+		player.x--;
+		player.vx = 0;
+	}
+
+	// Key(s)
+
+	// ---> Key0
+	isTouchingItem = (
+		key0.hitTestPoint(player.right())  ||
+		key0.hitTestPoint(player.left())   ||
+		key0.hitTestPoint(player.top())    ||
+		key0.hitTestPoint(player.bottom())
+	);
+
+	while(key0.hitTestPoint(player.right())) 
+	{
+		player.x--;
+		player.vx = 0;
+	}
+		
+	
+//  |-------Drawing Objects-------|
+
+	// Platform(s)
+	platform0.drawRect();
+	platform1.drawRect();
+
+	// Player(s)
+	player.drawRect();
+
+	// Door(s)
+	door0.drawRect();
+
+	// Key(s)
+	key0.drawCircle();
+
+	// Text
 	context.fillStyle = "black";
 	context.font = "20px Arial";
 	context.textAlign = "center";
-	context.fillText("Interact Mechanic: Press E to interact with objects/NPCs, pick up items, or read signs!", canvas.width/2, canvas.height/2);
+	context.fillText("Interact Mechanic: Press X to interact with objects and pick up items", canvas.width/2, canvas.height/2);
 
 
+	context.fillText("touching: " + isTouchingDoor, canvas.width/2, 30);
+	context.fillText("x key: " + x, canvas.width/2, 60);
+
+	//  |-------Controls & Actions-------|
+
+	// ---> Jumping
 	if(w && player.canJump && player.vy ==0)
 	{
 		player.canJump = false;
 		player.vy += player.jumpHeight;
 	}
 
-
+	// ---> Move Side to Side
 	if(a)
 	{
 		player.vx += -player.ax * player.force;
@@ -94,6 +225,7 @@ function animate()
 		player.vx += player.ax * player.force;
 	}
 
+	// ---> Dash
 	if (f && !fPressed && !dashCooldown) {
         fPressed = true;
 		dashCooldown = true;
@@ -121,6 +253,7 @@ function animate()
 		}, 2000);
     }
 
+	// Gravity Shift
 	if (player.isDashing) {
 		player.dashDuration--;
 		if (player.dashDuration <= 0) {
@@ -161,77 +294,61 @@ function animate()
 		gPressed = false;
 	}
 
-	if (e) // and touching a type of iteractable (door, item, npc, sign, etc) 
-	{
-
-	}
-
-
-	player.vx *= fX;
-	player.vy *= fY;
 	
-	player.vy += gravity;
+	// ---> Interaction
+	if (x && !xPressed && isTouchingDoor) // and touching a type of iteractable (door, item, npc, sign, etc) 
+	{
+		xPressed = true;
+
+		if (isHoldingKey == true) 
+		{
+			// clear the door
+			console.log("Player does have the key.");
+			
+			door0.x = 1000;
+			door0.y = 1000;
+		}
+
+		if (isHoldingKey == false) 
+		{
+			// print text
+			console.log("Player does not have the key.");
+
+			interactMessage = "You need a key to open this door.";
+			messageTimer = 300;
+		}
+	}
 	
-	player.x += Math.round(player.vx);
-	player.y += Math.round(player.vy);
-	
-	// Platform 0 Collision
-	while(platform0.hitTestPoint(player.bottom()) && player.vy >=0)
+	if (x && !xPressed && isTouchingItem && !isHoldingKey) 
 	{
-		player.y--;
-		player.vy = 0;
-		player.canJump = true;
-	}
-	while(platform0.hitTestPoint(player.left()) && player.vx <=0)
-	{
-		player.x++;
-		player.vx = 0;
-	}
-	while(platform0.hitTestPoint(player.right()) && player.vx >=0)
-	{
-		player.x--;
-		player.vx = 0;
-	}
-	while(platform0.hitTestPoint(player.top()) && player.vy <=0)
-	{
-		player.y++;
-		player.vy = 0;
+		xPressed = true;
+		isHoldingKey = true;
+
+		if (isHoldingKey == true) 
+		{
+			// clear the door
+			console.log("Player picked up key.");
+			
+			key0.x = 1000;
+			key0.y = 1000;
+
+			interactMessage = "You picked up a key!";
+			messageTimer = 300;
+		}
 	}
 
-	// Platform 1 Collision
-	while(platform1.hitTestPoint(player.bottom()) && player.vy >=0)
+	if (!x) 
 	{
-		player.y--;
-		player.vy = 0;
-		player.canJump = true;
+		xPressed = false;
 	}
-	while(platform1.hitTestPoint(player.left()) && player.vx <=0)
-	{
-		player.x++;
-		player.vx = 0;
-	}
-	while(platform1.hitTestPoint(player.right()) && player.vx >=0)
-	{
-		player.x--;
-		player.vx = 0;
-	}
-	while(platform1.hitTestPoint(player.top()) && player.vy <=0)
-	{
-		player.y++;
-		player.vy = 0;
-	}
-		
-	
-//  |-------Drawing Objects-------|
 
-	// Platform(s)
-	platform0.drawRect();
-	platform1.drawRect();
-
-	// Player(s)
-	player.drawRect();
-
-	// Door(s)
-	door0.drawRect();
+	if (messageTimer > 0) 
+	{
+		context.fillStyle = "black";
+		context.font = "16px Arial";
+		context.textAlign = "center";
+		context.fillText(interactMessage, canvas.width/2, canvas.height/2 + 40);
+		messageTimer--;
+	}
 
 }
